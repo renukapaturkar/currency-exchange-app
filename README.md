@@ -9,7 +9,7 @@ This project includes both a **frontend** and a **backend** — making it suitab
 ## Demo
 
 > A live demo may be available at:  
-> https://currency-exchange-app-zeta.vercel.app (if deployed)
+> https://currency-exchange-app-zeta.vercel.app (not working currently)
 
 ---
 
