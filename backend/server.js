@@ -11,7 +11,9 @@ app.use(cors());
 app.use(express.json());
 
 // Routes
-app.get('/rates', async (req, res) => {
+const router = express.Router();
+
+router.get('/rates', async (req, res) => {
     const base = (req.query.base || 'USD').toUpperCase();
     const symbols = req.query.symbols ? req.query.symbols.split(',') : null;
 
@@ -39,11 +41,18 @@ app.get('/rates', async (req, res) => {
     }
 });
 
-app.get('/health', (req, res) => {
+router.get('/health', (req, res) => {
     res.json({ status: 'ok' });
 });
 
+app.use('/', router);
+app.use('/api', router);
+
 // Start Server
-app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-});
+if (require.main === module) {
+    app.listen(PORT, () => {
+        console.log(`Server running on http://localhost:${PORT}`);
+    });
+}
+
+module.exports = app;
