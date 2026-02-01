@@ -46,7 +46,7 @@ currency-exchange-app/
 **APIs & Services**  
 - Uses a public exchange rate API ( ExchangeRate-API, Open Exchange Rates, Fixer.io)API are used in given order for the fallback mechanism.
 
-## mprovements in Progress
+## improvements in Progress
 
 The following areas are currently being worked on and need further refinement:
 
