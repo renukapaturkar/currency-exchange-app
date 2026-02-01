@@ -12,7 +12,7 @@ https://docs.google.com/document/d/1ZLhN0QnooNK1uTv89aDlebk2dfEtRLQeahOTBL_OpzI/
 ## Demo
 
 > A live demo may be available at:  
-> https://currency-exchange-app-zeta.vercel.app (not working currently)
+> https://currency-exchange-app-zeta.vercel.app
 
 ---
 
@@ -56,7 +56,7 @@ The following areas are currently being worked on and need further refinement:
 - **UI Bug**: The quick swap button to swap the source and target currencies is not working 
 - **API Caching Issue**: The current cache TTL is set to 1 hour, which can result in stale exchange rates being served instead of recently fetched data.
 - **UI Enhancement**: Add a historical exchange rate chart to help users visualize currency trends over time.
-- **Deploymentissue**: Deployment is not working, currently the issue is being looked into. 
+- **Deploymentissue**: Deployment is not working, currently the issue is being looked into.  [resolved] single deployment of both frontend and backend was causing issue, now it is fixed. 
 
 
 
