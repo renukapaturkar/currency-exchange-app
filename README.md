@@ -4,6 +4,9 @@ A full-stack currency conversion application that lets users convert amounts bet
 
 This project includes both a **frontend** and a **backend** — making it suitable as a portfolio piece or demo project for full-stack development.  
 
+# USER RESEARCH AND OTHER RESEARCH DOCUMENT : THE QUESTIONS ASKED IN THE ASSESSMENT CAN BE FOUND HERE: 
+https://docs.google.com/document/d/1ZLhN0QnooNK1uTv89aDlebk2dfEtRLQeahOTBL_OpzI/edit?usp=sharing
+
 ---
 
 ## Demo
