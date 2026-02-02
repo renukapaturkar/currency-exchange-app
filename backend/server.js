@@ -16,9 +16,10 @@ const router = express.Router();
 router.get('/rates', async (req, res) => {
     const base = (req.query.base || 'USD').toUpperCase();
     const symbols = req.query.symbols ? req.query.symbols.split(',') : null;
+    const source = req.query.source;
 
     try {
-        const data = await rateManager.fetchRates(base);
+        const data = await rateManager.fetchRates(base, source);
 
         // Filter symbols if requested
         if (symbols) {
@@ -38,6 +39,16 @@ router.get('/rates', async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(503).json({ error: error.message || 'Service Unavailable' });
+    }
+});
+
+router.get('/providers', (req, res) => {
+    try {
+        const providers = rateManager.getProviders();
+        res.json(providers);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Failed to fetch providers' });
     }
 });
 

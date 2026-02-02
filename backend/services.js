@@ -2,62 +2,139 @@ const axios = require('axios');
 const NodeCache = require('node-cache');
 require('dotenv').config();
 
-// Cache for 1 hour (3600 seconds)
-const rateCache = new NodeCache({ stdTTL: 3600 });
+// Cache for 15 minutes (900 seconds) - Optimized for 3500 req/month quota
+const rateCache = new NodeCache({ stdTTL: 900 });
 
 class ExchangeRateManager {
     constructor() {
-        this.providers = [
-            this.fetchFromExchangeRateAPI.bind(this),
-            this.fetchFromOpenExchangeRates.bind(this),
-            this.fetchFromFixer.bind(this)
-        ];
+        this.providers = {
+            'ExchangeRate-API': {
+                name: 'ExchangeRate-API',
+                fetcher: this.fetchFromExchangeRateAPI.bind(this),
+                status: 'Unknown',
+                lastSuccess: null,
+                lastFailure: null,
+                quota: 'high'
+            },
+            'Open Exchange Rates': {
+                name: 'Open Exchange Rates',
+                fetcher: this.fetchFromOpenExchangeRates.bind(this),
+                status: 'Unknown',
+                lastSuccess: null,
+                lastFailure: null,
+                quota: 'high'
+            },
+            'Fixer.io': {
+                name: 'Fixer.io',
+                fetcher: this.fetchFromFixer.bind(this),
+                status: 'Unknown',
+                lastSuccess: null,
+                lastFailure: null,
+                quota: 'low'
+            }
+        };
     }
 
-    async fetchRates(base = "USD") {
+    getProviders() {
+        return Object.values(this.providers).map(p => ({
+            name: p.name,
+            status: p.status,
+            lastSuccess: p.lastSuccess,
+            lastFailure: p.lastFailure
+        }));
+    }
+
+    updateProviderStatus(name, success, timestamp = Date.now()) {
+        const provider = this.providers[name];
+        if (provider) {
+            provider.status = success ? 'Active' : 'Down';
+            if (success) {
+                provider.lastSuccess = timestamp;
+            } else {
+                provider.lastFailure = timestamp;
+            }
+        }
+    }
+
+    async fetchRates(base = "USD", source = null) {
+        // Cache key logic: if source is specific, use that. Else generic.
+        const cacheKey = source ? `${base}_${source}` : base;
+
         // Check cache
-        const cachedData = rateCache.get(base);
+        const cachedData = rateCache.get(cacheKey);
         if (cachedData) {
-            console.log(`Serving ${base} from cache`);
+            console.log(`Serving ${base} from cache (Key: ${cacheKey})`);
             return cachedData;
         }
 
-        const errors = [];
-        let bestCandidate = null;
-
-        for (const fetcher of this.providers) {
+        // If specific source requested
+        if (source) {
+            const provider = this.providers[source];
+            if (!provider) {
+                throw new Error(`Provider ${source} not found`);
+            }
             try {
-                const result = await fetcher(base);
+                const result = await provider.fetcher(base);
+                if (result) {
+                    this.updateProviderStatus(result.source, true);
+                    const responseData = this.formatResponse(result);
+                    // Cache with standard TTL
+                    rateCache.set(cacheKey, responseData);
+                    // Optimization: Also cache to generic key if specific source was requested
+                    // This ensures switching back to "Auto" (no source) uses this fresh data
+                    rateCache.set(base, responseData);
+                    return responseData;
+                }
+            } catch (error) {
+                this.updateProviderStatus(source, false);
+                throw error;
+            }
+            throw new Error(`Provider ${source} returned no data`);
+        }
+
+        // --- Smart Provider Selection Strategy ---
+        // 1. Try High Quota providers first (Randomized to balance load)
+        // 2. Try Low Quota providers as backup
+
+        const allProviders = Object.values(this.providers);
+        const highQuota = allProviders.filter(p => p.quota === 'high');
+        const lowQuota = allProviders.filter(p => p.quota === 'low');
+
+        // Shuffle high quota providers to distribute load
+        const shuffledHigh = highQuota.sort(() => 0.5 - Math.random());
+        const prioritizedProviders = [...shuffledHigh, ...lowQuota];
+
+        const errors = [];
+
+        for (const provider of prioritizedProviders) {
+            try {
+                console.log(`Attempting fetch from ${provider.name}...`);
+                const result = await provider.fetcher(base);
                 if (result) {
                     const now = Math.floor(Date.now() / 1000);
                     const age = now - result.timestamp;
                     console.log(`Provider ${result.source} returned data. Age: ${age}s`);
 
-                    // If data is fresh ( < 1 hour), return immediately
-                    if (age < 3600) {
-                        const responseData = this.formatResponse(result);
-                        rateCache.set(base, responseData);
-                        return responseData;
-                    }
+                    this.updateProviderStatus(result.source, true);
 
-                    // If stale, keep it if it's better than what we have
-                    if (!bestCandidate || result.timestamp > bestCandidate.timestamp) {
-                        bestCandidate = result;
-                    }
+                    // If data is reasonably fresh (< 1 hour), accept it.
+                    // Note: reducing global cache TTL handles the "serving old data" issue.
+                    // We accept whatever the provider gives us as "current" state.
+                    const responseData = this.formatResponse(result);
+
+                    // Optimization: Cache under both generic Key (base) AND specific provider key
+                    // This future-proofs if the user switches to this specific provider next
+                    rateCache.set(base, responseData);
+                    rateCache.set(`${base}_${provider.name}`, responseData);
+
+                    return responseData;
                 }
             } catch (error) {
                 const msg = error.message || String(error);
                 errors.push(msg);
-                console.warn(`Provider failed: ${msg}`);
+                console.warn(`Provider ${provider.name} failed: ${msg}`);
+                this.updateProviderStatus(provider.name, false);
             }
-        }
-
-        // If we have a candidate (even if stale), return it as a last resort
-        if (bestCandidate) {
-            console.log(`All providers checked. Returning best candidate from ${bestCandidate.source} (Age: ${Math.floor(Date.now() / 1000 - bestCandidate.timestamp)}s)`);
-            const responseData = this.formatResponse(bestCandidate);
-            rateCache.set(base, responseData);
-            return responseData;
         }
 
         throw new Error(`All providers failed for ${base}. Errors: ${errors.join("; ")}`);

@@ -29,6 +29,7 @@ function App() {
         }
     };
 
+    // Load rates when baseCurrency changes
     useEffect(() => {
         loadRates(baseCurrency);
     }, [baseCurrency]);
@@ -38,28 +39,32 @@ function App() {
             <div className="max-w-5xl mx-auto">
 
                 {/* Header */}
-                <div className="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                    <div>
-                        <h1 className="text-3xl font-bold text-slate-900">Currency Tracker</h1>
-                        <p className="text-slate-500 mt-1">Real-time exchange rates & conversion</p>
+                <div className="mb-8 flex flex-col gap-6">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div>
+                            <h1 className="text-3xl font-bold text-slate-900">Currency Tracker</h1>
+                            <p className="text-slate-500 mt-1">Real-time exchange rates & conversion</p>
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                            {ratesData && (
+                                <FreshnessIndicator
+                                    timestamp={ratesData.timestamp}
+                                    source={ratesData.source}
+                                />
+                            )}
+                            <button
+                                onClick={() => loadRates(baseCurrency)}
+                                disabled={loading}
+                                className="p-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors disabled:opacity-50"
+                                title="Refresh Rates"
+                            >
+                                <RefreshCw size={20} className={loading ? "animate-spin" : ""} />
+                            </button>
+                        </div>
                     </div>
 
-                    <div className="flex items-center gap-3">
-                        {ratesData && (
-                            <FreshnessIndicator
-                                timestamp={ratesData.timestamp}
-                                source={ratesData.source}
-                            />
-                        )}
-                        <button
-                            onClick={() => loadRates(baseCurrency)}
-                            disabled={loading}
-                            className="p-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors disabled:opacity-50"
-                            title="Refresh Rates"
-                        >
-                            <RefreshCw size={20} className={loading ? "animate-spin" : ""} />
-                        </button>
-                    </div>
+
                 </div>
 
                 {/* Content */}

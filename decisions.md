@@ -7,7 +7,6 @@
 - **Reasoning**:
     - **Unified Stack**: Javascript/Node.js for both frontend and backend simplifies development and maintenance.
     - **Performance**: Async nature of Node.js is ideal for handling concurrent API requests to multiple providers.
-    - **Replaced Python**: Originally planned for Python/FastAPI, but switched to Node.js per user requirement.
 
 ### Architecture: Robust Fallback with Freshness Priority
 - **Strategy**: Primary (ExchangeRate-API) -> Fallback 1 (Open Exchange Rates) -> Fallback 2 (Fixer.io).
