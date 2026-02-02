@@ -56,6 +56,7 @@ The following areas are currently being worked on and need further refinement:
 - **UI Bug**: The quick swap button to swap the source and target currencies is not working 
 - **API Caching Issue**: The current cache TTL is set to 1 hour, which can result in stale exchange rates being served instead of recently fetched data.
 - **UI Enhancement**: Add a historical exchange rate chart to help users visualize currency trends over time.
+- **UI/UX Feature**: - option to free tier users to change the provider and check when the last data was updated for each. (this will give users the ability to check multiple data providers and make the decisions based on it) [inprogress] 
 - **Deploymentissue**: Deployment is not working, currently the issue is being looked into.  [resolved] single deployment of both frontend and backend was causing issue, now it is fixed. 
 
 
